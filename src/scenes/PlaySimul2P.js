@@ -1,9 +1,10 @@
-class Play extends Phaser.Scene {
+class PlaySimul2P extends Phaser.Scene {
     constructor() {
-        super("playScene");
+        super("simul2PScene");
+        
     }
 
-    init () {
+    init() {
         this.NUM_SHIPS = 3;
         this.shipsSpawnData = [
             {x: game.config.width + borderUISize*6, y: borderUISize*4, points: 30},
@@ -14,11 +15,11 @@ class Play extends Phaser.Scene {
 
         this.gameEndTimerDelay;
         this.timeRegainMultiplier = 1.0;
-        this.TIME_REGAIN_MULTIPLIER_MIN = 0.25;
+        this.TIME_REGAIN_MULTIPLIER_MIN = 0.15;
         this.additionalTimeText = "";
         this.additionalTimeTextTimer;
     }
-    
+
     preload() {
         // load images/tile sprites
         this.load.image('rocket', './assets/rocket.png');
@@ -42,32 +43,41 @@ class Play extends Phaser.Scene {
         this.add.rectangle(game.config.width - borderUISize, 0, borderUISize, game.config.height, 0xFFFFFF).setOrigin(0, 0);
 
         // add rocket (p1)
-        let rocketArgs = {
+        let rocketArgsP1 = {
             scene: this,
-            x: game.config.width/2,
+            x: game.config.width * 0.75,
             y: game.config.height - borderUISize - borderPadding,
             texture: 'rocket',
             frame: undefined,
-            airControlled: game.settings.mode == "singleplayerNovice",
+            airControlled: true,
+            moveLeftKey: keyLEFT,
+            moveRightKey: keyRIGHT,
             fireKey: keyUP
         }
-        //this.p1Rocket = new Rocket(this, game.config.width/2, game.config.height - borderUISize - borderPadding, 'rocket').setOrigin(0.5, 0);
-        this.p1Rocket = new Rocket(rocketArgs)
+        this.p1Rocket = new Rocket(rocketArgsP1);
+
+        // add rocket (p2)
+        let rocketArgsP2 = {
+            scene: this,
+            x: game.config.width * 0.25,
+            y: game.config.height - borderUISize - borderPadding,
+            texture: 'rocket',
+            frame: undefined,
+            airControlled: true,
+            moveLeftKey: keyA,
+            moveRightKey: keyD,
+            fireKey: keyW
+        }
+        this.p2Rocket = new Rocket(rocketArgsP2);
 
         // add spaceships (x3)
         
         for (let i = 0; i < this.NUM_SHIPS; i ++) {
             this.shipsArray.push(new Spaceship(this, this.shipsSpawnData[i].x, this.shipsSpawnData[i].y, 'spaceship', 0, this.shipsSpawnData[i].points).setOrigin(0, 0));
         }
-        //this.ship01 = new Spaceship(this, game.config.width + borderUISize*6, borderUISize*4, 'spaceship', 0, 30).setOrigin(0, 0);
-        //this.ship02 = new Spaceship(this, game.config.width + borderUISize*3, borderUISize*5 + borderPadding*2, 'spaceship', 0, 20).setOrigin(0,0);
-        //this.ship03 = new Spaceship(this, game.config.width, borderUISize*6 + borderPadding*4, 'spaceship', 0, 10).setOrigin(0,0);
 
         // define keys
-        //keyUP = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
         keyR = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
-        //keyLEFT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
-        //keyRIGHT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
 
         // animation config
         this.anims.create({
@@ -196,6 +206,7 @@ class Play extends Phaser.Scene {
 
         if (!this.gameOver) {               
             this.p1Rocket.update();         // update rocket sprite
+            this.p2Rocket.update();
 
             for (let ship of this.shipsArray) {
                 ship.update();
@@ -209,9 +220,14 @@ class Play extends Phaser.Scene {
                 this.shipExplode(ship);
                 this.addTimeOnHit(ship);
             }
+            if (this.checkCollision(this.p2Rocket, ship)) {
+                this.p2Rocket.reset();
+                this.shipExplode(ship);
+                this.addTimeOnHit(ship);
+            }
         }
         // Update visibility of fire textbox
-        this.fireTextTextbox.visible = this.p1Rocket.isFiring;
+        this.fireTextTextbox.visible = this.p1Rocket.isFiring || this.p2Rocket.isFiring;
         // Update the text for time remaining
         this.timeLeftText = "Time: " + Math.ceil((this.gameEndTimerDelay - this.clock.getElapsed()) / 1000);
         this.timeLeftText = this.timeLeftText + this.additionalTimeText;
@@ -242,6 +258,8 @@ class Play extends Phaser.Scene {
         // Play animation for ship getting destroyed
         ship.playDestroyAnim();
         
+        // Move ship away so only one rocket can hit it at a time
+        ship.x = game.config.width * 2;
         boom.on('animationcomplete', () => {    // callback after anim completes
           ship.reset();                         // reset ship position
           ship.alpha = 1;                       // make ship visible again
