@@ -1,9 +1,11 @@
 # Overview
+
 Author: SalilPT<br>
 Project Title: ROCKET PATROL (Modded)<br>
 Date: April 19, 2022<br>
 Project Work Time: 20 hours(?) excluding making the base project<br>
 <br>
+
 ## What is this?
 
 This is a modified remake of *Rocket Patrol* that uses the Phaser 3 JavaScript framework.
@@ -17,15 +19,16 @@ The base project (which can be found [here](https://github.com/SalilPT/CMPM120-R
 
 All of the files in the *assets* folder were made by Nathan Altice.
 <br>
-<br>
+
 # Information About Modes
+
 | | Novice | Expert | Simultaneous 2P |
 | --- | --- | --- | --- |
 | Base Time (seconds) | 60 | 45 | 60 |
 | In-flight Rocket Control | Yes | No | Yes |
 | Minimum Time Regain Multiplier | 0.25 | 0.25 | 0.15 |
 <br>
-<br>
+
 # Points Breakdown
 
 - Track a high score that persists across scenes and display it in the UI (5)
