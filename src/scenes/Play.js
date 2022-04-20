@@ -16,7 +16,7 @@ class Play extends Phaser.Scene {
         this.timeRegainMultiplier = 1.0;
         this.TIME_REGAIN_MULTIPLIER_MIN = 0.25;
         this.additionalTimeText = "";
-        this.additionalTimeTextTimer;
+        this.additionalTimeTextTimer = new Phaser.Time.TimerEvent();
     }
     
     preload() {
@@ -55,8 +55,7 @@ class Play extends Phaser.Scene {
         this.p1Rocket = new Rocket(rocketArgs)
 
         // add spaceships (x3)
-        
-        for (let i = 0; i < this.NUM_SHIPS; i ++) {
+        for (let i = 0; i < this.NUM_SHIPS; i++) {
             this.shipsArray.push(new Spaceship(this, this.shipsSpawnData[i].x, this.shipsSpawnData[i].y, 'spaceship', 0, this.shipsSpawnData[i].points).setOrigin(0, 0));
         }
         //this.ship01 = new Spaceship(this, game.config.width + borderUISize*6, borderUISize*4, 'spaceship', 0, 30).setOrigin(0, 0);
@@ -252,22 +251,24 @@ class Play extends Phaser.Scene {
         this.scoreLeft.text = this.p1Score;
 
         this.sound.play('sfx_explosion');
-      }
+    }
 
-      addTimeOnHit(hitShip) {
-        // Add back time to time left
-        let timeRemaining = this.gameEndTimerDelay - this.clock.getElapsed();
-        // Remove old clock, make a new one with more time
-        let millisecondsToAdd = (hitShip.points * 100) * this.timeRegainMultiplier;
-        this.gameEndTimerDelay = timeRemaining + millisecondsToAdd;
-        // Need to update this.gameEndTimerConfig.delay
-        this.gameEndTimerConfig.delay = this.gameEndTimerDelay;
-        // Reset this.clock to use the new remaining time
-        this.clock.reset(this.gameEndTimerConfig);
+    addTimeOnHit(hitShip) {
+    // Add back time to time left
+    let timeRemaining = this.gameEndTimerDelay - this.clock.getElapsed();
+    // Remove old clock, make a new one with more time
+    let millisecondsToAdd = (hitShip.points * 100) * this.timeRegainMultiplier;
+    this.gameEndTimerDelay = timeRemaining + millisecondsToAdd;
+    // Need to update this.gameEndTimerConfig.delay
+    this.gameEndTimerConfig.delay = this.gameEndTimerDelay;
+    // Reset this.clock to use the new remaining time
+    this.clock.reset(this.gameEndTimerConfig);
 
-        this.timeRegainMultiplier = Math.max((this.timeRegainMultiplier - 0.05).toFixed(2), this.TIME_REGAIN_MULTIPLIER_MIN);
-        console.log(this.timeRegainMultiplier)
-        this.additionalTimeText = "+" + (millisecondsToAdd / 1000).toFixed(2);
-        this.additionalTimeTextTimer = this.time.addEvent(this.additionalTimeTextTimerConfig);
-      }
+    this.timeRegainMultiplier = Math.max((this.timeRegainMultiplier - 0.05).toFixed(2), this.TIME_REGAIN_MULTIPLIER_MIN);
+    this.additionalTimeText = "+" + (millisecondsToAdd / 1000).toFixed(2);
+
+    // Remove current timer event (if any) for regained time text and then make a new timer event
+    this.additionalTimeTextTimer.remove();
+    this.additionalTimeTextTimer = this.time.addEvent(this.additionalTimeTextTimerConfig);
+    }
 }
